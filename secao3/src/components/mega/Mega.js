@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
-import {Text, TextInput, Button} from 'react-native';
+import {Text, TextInput, Button, View} from 'react-native';
 import Style from '../style';
+import Numero from './Numero';
 
 export default class Mega extends Component {
   state = {qtdeNumeros: this.props.qtdeNumeros, numeros: []};
@@ -25,9 +26,7 @@ export default class Mega extends Component {
   render() {
     return (
       <>
-        <Text style={Style.txtG}>
-          Gerador de Mega-Sena {this.state.qtdeNumeros}
-        </Text>
+        <Text style={Style.txtG}>Gerador de Mega-Sena</Text>
         <TextInput
           placeholder="Quantidade de Números"
           value={`${this.state.qtdeNumeros}`}
@@ -36,7 +35,18 @@ export default class Mega extends Component {
           keyboardType={'numeric'}
         />
         <Button title="Exibir números" onPress={this.gerarNumeros} />
-        <Text>{this.state.numeros.sort((a, b) => a - b).join(', ')}</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+          }}>
+          {this.state.numeros
+            .sort((a, b) => a - b)
+            .map((num, index) => (
+              <Numero key={index} num={num} />
+            ))}
+        </View>
       </>
     );
   }
