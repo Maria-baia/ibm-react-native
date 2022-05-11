@@ -6,21 +6,31 @@ import Display from './src/components/Display';
 
 export default () => {
   const [value, setValue] = useState('0');
+  const [number, setNumber] = useState('0');
   const [equation, setEquation] = useState('');
 
   const addDigit = n => {
     if (
-      equation.endsWith('/') ||
-      equation.endsWith('*') ||
-      equation.endsWith('-') ||
-      equation.endsWith('+') ||
-      (value === '0' && n !== '.')
+      (equation.endsWith('/') ||
+        equation.endsWith('*') ||
+        equation.endsWith('-') ||
+        equation.endsWith('+')) &&
+      value === '0' &&
+      n !== '.'
     ) {
       setValue(n);
-    } else if (n === '.' && value.includes('.') === false) {
-      setValue(value + n);
+      setNumber(n);
+    } else if (n === '.' && number.includes('.') === false) {
+      if (number === '0') {
+        setValue(number + n);
+        setNumber(number + n);
+      } else {
+        setValue(value + n);
+        setNumber(value + n);
+      }
     } else if (n !== '.' && value !== '0') {
       setValue(value + n);
+      setNumber(value + n);
     }
   };
 
@@ -31,9 +41,11 @@ export default () => {
 
   const functionSetOperation = operation => {
     if (operation !== '=') {
-      setEquation(equation + value + operation);
+      setEquation(value + operation);
+      setNumber('0');
     } else {
-      setValue(eval(equation + value));
+      setValue(`${eval(equation + value)}`);
+      setEquation(`${eval(equation + value)}`);
     }
   };
   return (
