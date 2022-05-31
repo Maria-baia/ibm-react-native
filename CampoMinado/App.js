@@ -1,9 +1,9 @@
-import React, {Component} from 'react';
-import {StyleSheet, Text, View, Alert} from 'react-native';
-import params from './src/params'
-import MineField from './src/components/MineField'
-import Header from './src/components/Header'
-import LevelSelection from './src/screens/LevelSelection'
+import React, {useReducer} from 'react';
+import {StyleSheet, View, Alert} from 'react-native';
+import params from './src/params';
+import MineField from './src/components/MineField';
+import Header from './src/components/Header';
+import LevelSelection from './src/screens/LevelSelection';
 import {
   createMinedBoard,
   cloneBoard,
@@ -12,94 +12,115 @@ import {
   wonGame,
   showMines,
   invertFlag,
-  flagsUsed
-} from './src/functions'
+  flagsUsed,
+} from './src/functions';
 
-export default class App extends Component {
+export default () => {
+  const cols = params.getColumnsAmount();
+  const rows = params.getRowsAmount();
 
-  constructor(props) {
-    super(props)
-    this.state = this.createState()
-  }
+  const minesAmount = () => {
+    // const rows = params.getRowsAmount();
+    // const cols = params.getColumnsAmount();
+    return Math.ceil(cols * rows * params.difficultLevel);
+  };
 
-  minesAmount = () => {
-    const cols = params.getColumnsAmount()
-    const rows = params.getRowsAmount()
-    return Math.ceil(cols * rows * params.difficultLevel)
-  }
+  // const [showLevelSelection, setShowLevelSelection] = useState(false);
+  // const [lost, setLost] = useState(false);
+  // const [won, setWon] = useState(false);
+  // const [board, setBoard] = useState(
+  //   createMinedBoard(rows, cols, minesAmount()),
+  // );
+  const inicialState = {
+    board: createMinedBoard(rows, cols, minesAmount()),
+    won: false,
+    lost: false,
+    showLevelSelection: false,
+  };
 
-  createState = () => {
-    const cols = params.getColumnsAmount()
-    const rows = params.getRowsAmount()
-    return {
-      board: createMinedBoard(rows, cols, this.minesAmount()),
+  const [state, updateState] = useReducer(
+    (state, updates) => ({
+      ...state,
+      ...updates,
+    }),
+    inicialState,
+  );
+
+  const createState = () => {
+    // const cols = params.getColumnsAmount();
+    // const rows = params.getRowsAmount();
+    updateState({
+      board: createMinedBoard(rows, cols, minesAmount()),
       won: false,
       lost: false,
       showLevelSelection: false,
-    }
-  }
+    });
+  };
 
-  onOpenField = (row, column) => {
-    const board = cloneBoard(this.state.board)
-    openField(board, row, column)
-    const lost = hadExplosion(board)
-    const won = wonGame(board)
+  const onOpenField = (row, column) => {
+    const board = cloneBoard(state.board);
+    openField(board, row, column);
+    const lost = hadExplosion(board);
+    const won = wonGame(board);
 
     if (lost) {
-      showMines(board)
-      Alert.alert('Perdeeeeu!', 'Que buuuurro!')
+      showMines(board);
+      Alert.alert('Perdeeeeu!', 'Que buuuurro!');
     }
 
     if (won) {
-      Alert.alert('Parabéns', 'Você Venceu!')
+      Alert.alert('Parabéns', 'Você Venceu!');
     }
 
-    this.setState({ board, lost, won })
-  }
+    updateState({board, lost, won});
+  };
 
-  onSelectField = (row, column) => {
-    const board = cloneBoard(this.state.board)
-    invertFlag(board, row, column)
-    const won = wonGame(board)
+  const onSelectField = (row, column) => {
+    const board = cloneBoard(state.board);
+    invertFlag(board, row, column);
+    const won = wonGame(board);
 
     if (won) {
-      Alert.alert('Parabéns', 'Você Venceu!')
+      Alert.alert('Parabéns', 'Você Venceu!');
     }
+    updateState({board, won});
+  };
 
-    this.setState({ board, won })
-  }
+  const onLevelSelected = level => {
+    params.difficultLevel = level;
+    createState();
+  };
 
-  onLevelSelected = level => {
-    params.difficultLevel = level
-    this.setState(this.createState())
-  }
-
-  render() {
-    return (
-      <View style={styles.container}>
-        <LevelSelection isVisible={this.state.showLevelSelection}
-          onLevelSelected={this.onLevelSelected}
-          onCancel={() => this.setState({ showLevelSelection: false })} />
-        <Header flagsLeft={this.minesAmount() - flagsUsed(this.state.board)}
-          onNewGame={() => this.setState(this.createState())} 
-          onFlagPress={() => this.setState({ showLevelSelection: true })} />
-        <View style={styles.board}>
-          <MineField board={this.state.board} 
-            onOpenField={this.onOpenField}
-            onSelectField={this.onSelectField} />
-        </View>
+  return (
+    <View style={styles.container}>
+      <LevelSelection
+        isVisible={state.showLevelSelection}
+        onLevelSelected={onLevelSelected}
+        onCancel={() => updateState({showLevelSelection: false})}
+      />
+      <Header
+        flagsLeft={minesAmount() - flagsUsed(state.board)}
+        onNewGame={createState}
+        onFlagPress={() => updateState({showLevelSelection: true})}
+      />
+      <View style={styles.board}>
+        <MineField
+          board={state.board}
+          onOpenField={onOpenField}
+          onSelectField={onSelectField}
+        />
       </View>
-    );
-  }
-}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-end'
+    justifyContent: 'flex-end',
   },
   board: {
     alignItems: 'center',
-    backgroundColor: '#AAA'
-  }
+    backgroundColor: '#AAA',
+  },
 });
